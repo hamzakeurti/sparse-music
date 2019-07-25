@@ -6,6 +6,8 @@ import torch.nn.functional as F
 from numpy.lib.stride_tricks import as_strided
 from sklearn.decomposition import DictionaryLearning,MiniBatchDictionaryLearning,SparseCoder
 
+import spams
+
 def to_windows(input, kernel_size, step_size=1):
     out_shape = input.shape[:2]
     out_shape += ((input.shape[2] - kernel_size)//step_size +1, (input.shape[3] - kernel_size)//step_size +1) + (kernel_size,kernel_size)
@@ -59,6 +61,70 @@ class SparseLayer(nn.Module): # Convolution-like
         # input : (batch_size, channels, height, width)
         patches = self.extract_patches(input)
         self.dictionary.fit(patches)
+        # self.dictionary_trainer.partial_fit(reshaped)
+
+    def extract_patches(self,input):
+        padded = np.pad(input,((0,0),(0,0),(self.pad,self.pad),(self.pad,self.pad)),mode='constant')
+        
+        windowed = to_windows(padded,kernel_size=self.filter_size)
+        del padded
+
+        reshaped = windowed.reshape(-1,self.n_features)
+        del windowed
+        
+        indx = np.random.randint(reshaped.shape[0],size=self.batch_size)
+        return reshaped[indx]
+
+
+class SLayer(nn.Module):
+    def __init__(self,input_channels,output_channels,filter_size,batch_size=500,param={}):
+        super(SparseLayer,self).__init__()
+        self.input_channels = input_channels
+        self.output_channels = output_channels
+        self.dictionary_size = output_channels
+        self.filter_size = filter_size
+        self.pad = self.filter_size // 2
+        self.n_features = self.filter_size**2 * self.input_channels
+        self.batch_size = batch_size
+        self.dictionary = None
+        self.model = None
+        self.param = param
+
+    def train(self,input):
+        padded = np.pad(input,((0,0),(0,0),(self.pad,self.pad),(self.pad,self.pad)),mode='constant')
+        
+        windowed = to_windows(padded,kernel_size=self.filter_size)
+        del padded
+
+        reshaped = windowed.reshape(-1,self.n_features)
+        del windowed
+
+        patches = self.extract_patches(reshaped)
+        D = self.train_dictionary(patches)
+
+        self.dictionary = torch.tensor(D.T.reshape(self.output_channels,self.input_channels,self.filter_size,self.filter_size))
+
+    def forward_conv(self,input):        
+        padded = np.pad(input,((0,0),(0,0),(self.pad,self.pad),(self.pad,self.pad)),mode='constant')
+
+        return F.conv2d(torch.as_tensor(padded),self.dictionary)
+
+
+
+    def train_dictionary(self,input):
+        # input : (batch_size, channels, height, width)
+        patches = self.extract_patches(input)
+        X = patches
+        X = X - np.tile(np.mean(X,0),(X.shape[0],1))
+        X = np.asfortranarray(X / np.tile(np.sqrt((X * X).sum(axis=0)),(X.shape[0],1)),dtype = float)
+        if self.model:
+            (D,self.model) = spams.trainDL(X,return_model = True,model = self.model,**self.param)
+            self.param['D'] = D
+        else:
+            (D,self.model) = spams.trainDL(X,return_model = True,**self.param)
+            self.param['D'] = D
+        return D
+
         # self.dictionary_trainer.partial_fit(reshaped)
 
     def extract_patches(self,input):
