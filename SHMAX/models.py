@@ -114,7 +114,7 @@ class SLayer(nn.Module):
     def train_dictionary(self,input):
         # input : (batch_size, channels, height, width)
         patches = self.extract_patches(input)
-        X = patches
+        X = patches.T
         X = X - np.tile(np.mean(X,0),(X.shape[0],1))
         X = np.asfortranarray(X / np.tile(np.sqrt((X * X).sum(axis=0)),(X.shape[0],1)),dtype = float)
         if self.model:
