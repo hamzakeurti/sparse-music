@@ -78,7 +78,7 @@ class SparseLayer(nn.Module): # Convolution-like
 
 class SLayer(nn.Module):
     def __init__(self,input_channels,output_channels,filter_size,batch_size=500,param={}):
-        super(SparseLayer,self).__init__()
+        super(SLayer,self).__init__()
         self.input_channels = input_channels
         self.output_channels = output_channels
         self.dictionary_size = output_channels
