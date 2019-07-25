@@ -91,16 +91,16 @@ class SLayer(nn.Module):
         self.param = param
 
     def train(self,input):
-        padded = np.pad(input,((0,0),(0,0),(self.pad,self.pad),(self.pad,self.pad)),mode='constant')
+        # padded = np.pad(input,((0,0),(0,0),(self.pad,self.pad),(self.pad,self.pad)),mode='constant')
         
-        windowed = to_windows(padded,kernel_size=self.filter_size)
-        del padded
+        # windowed = to_windows(padded,kernel_size=self.filter_size)
+        # del padded
 
-        reshaped = windowed.reshape(-1,self.n_features)
-        del windowed
+        # reshaped = windowed.reshape(-1,self.n_features)
+        # del windowed
 
-        patches = self.extract_patches(reshaped)
-        D = self.train_dictionary(patches)
+        # patches = self.extract_patches(reshaped)
+        D = self.train_dictionary(input)
 
         self.dictionary = torch.tensor(D.T.reshape(self.output_channels,self.input_channels,self.filter_size,self.filter_size))
 
