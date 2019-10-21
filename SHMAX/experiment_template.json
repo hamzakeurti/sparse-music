@@ -1,0 +1,29 @@
+{
+    "warm_start":
+    {
+        "iteration":0,
+        "pickles_dir":""
+    },
+    "experiments_list":
+    [
+        {
+            "name" : "filters"
+        },
+        {
+            "name" : "pure_tones"
+        },
+        {
+            "name" : "harmonic_complex_tones",
+            "harmonics_index" : [1,2,3,4]
+        },
+        {
+            "name" : "jittered_complex_tones",
+            "harmonics_index" : [1,2,3,4],
+            "jittering" : 0.2
+        },
+        {
+            "name" : "missing_fundamental_tones",
+            "harmonics_index" : [2,3,4,5]
+        }
+    ]
+}

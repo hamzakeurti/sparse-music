@@ -1,0 +1,38 @@
+{
+    "data":
+    {
+        "dataset":"munsicnet",
+        "batch_size":0,
+        "directory":"/data/valentin/music-learning/musicnet",
+        "sampling_rate":44100,
+        "window":44100
+    },
+    "model":
+    {
+        "n_layers":0,
+        "pool_strides" : [],
+        "pool_size" : [],
+        "filter_size" : 9,
+        "channels" : [1,10,20,30,40,50,60,70,80],
+        "spams_param" : 
+        {
+            "iter" : 1,
+            "mode" : 2,
+            "lambda1" : 0.2,
+            "modeD" : 0
+        },
+        "batch_size" : 500 
+    },
+    "warm_start":
+    {
+        "iteration":0,
+        "pickles_dir":""
+    },
+    "training":
+    {
+        "max_iter":10000,
+        "sub_iterations":5,
+        "save_dir":"/",
+        "save_rate":1000
+    }
+}
