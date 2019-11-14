@@ -152,12 +152,26 @@ class SLayer(nn.Module):
         # self.dictionary_trainer.partial_fit(reshaped)
 
     def extract_patches(self,input):
-        # padded = np.pad(input,((0,0),(0,0),(self.pad,self.pad),(self.pad,self.pad)),mode='constant')
-        
-        windowed = to_windows(input,kernel_size=self.filter_size)
+        batch_index = np.random.randint(input.shape[0],size=self.batch_size)
+        # Patches will be selected from index as upper left corner
+        height_index = np.random.randint(input.shape[-2] - self.filter_size + 1, size=self.batch_size)
+        width_index = np.random.randint(input.shape[-1] - self.filter_size + 1, size=self.batch_size)
 
-        reshaped = windowed.reshape(-1,self.n_features)
-        del windowed
+        patches = np.zeros((self.batch_size,input.shape[1],self.filter_size,self.filter_size))
+        for i in range(self.batch_size):
+            b = batch_index[i]
+            h = height_index[i]
+            w = width_index[i]
+            f = self.filter_size
+            patches[i] = input[b,:,h:h+f,w:w+f]
+
+        return patches.reshape(self.batch_size,-1)
+
+        # # padded = np.pad(input,((0,0),(0,0),(self.pad,self.pad),(self.pad,self.pad)),mode='constant')
+        # windowed = to_windows(input,kernel_size=self.filter_size)
+
+        # reshaped = windowed.reshape(-1,self.n_features)
+        # del windowed
         
-        indx = np.random.randint(reshaped.shape[0],size=self.batch_size)
-        return reshaped[indx]
+        # indx = np.random.randint(reshaped.shape[0],size=self.batch_size)
+        # return reshaped[indx]

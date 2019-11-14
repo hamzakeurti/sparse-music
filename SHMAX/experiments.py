@@ -48,7 +48,7 @@ def do_experiment(model,exp_config,window,sr,dirname):
     save_dir = os.path.join(dirname,exp_config[NAME])
     if not os.path.exists(save_dir):
         os.mkdir(save_dir)
-    if exp_config[NAME] == FILTERS:
+    if FILTERS in exp_config[NAME]:
         plot_model_filters(model,save_dir)
         return
     freqs = 21.85*np.power(2,1/12)**np.linspace(0,100,100,endpoint=False)    
