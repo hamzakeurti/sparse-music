@@ -1,5 +1,6 @@
 import pickle
 import os.path as path
+import os
 
 WARM_START = 'warm_start'
 D = 'D'
@@ -29,6 +30,15 @@ def save_state(layer,pickle_file):
     with open( pickle_file, "wb" ) as f:
         pickle.dump(state,f)
     
+def save_tensor(tensor,pickle_file):
+    with open( pickle_file, "wb" ) as f:
+        pickle.dump(tensor,f)
+
+def load_tensor(pickle_file):
+    with open( pickle_file, "rb" ) as f:
+        return pickle.load(f)
+
+
 def update_model_from_config(model,config):
     iteration = config[ITERATION]
     pickles_dir = config[PICKLES_DIRECTORY]
@@ -41,13 +51,11 @@ def update_model_from_config(model,config):
             continue
 
 def save_model(model,iteration,save_dir):
+    if not os.path.exists(save_dir):
+        os.mkdir(save_dir)
     for layer in range(model.n_layers):
         try:
             pickled_state = path.join(save_dir,f's_layer_{layer}_state{iteration}.p')
             save_state(model.s_layers[layer],pickled_state)
         except KeyError:
             continue
-
-def save_tensor(tensor,pickle_file):
-    with open( pickle_file, "wb" ) as f:
-        pickle.dump(tensor,f)
