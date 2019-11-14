@@ -34,7 +34,7 @@ class SHMAX:
         channels = config[CHANNELS]
         spams_param = config[SPAMS_PARAM]
         batch_size = config[BATCH_SIZE]
-        n_subiterations = config[N_SUBITERATIONS]
+        n_subiterations = config.get(N_SUBITERATIONS,1)
         increment_rate = config.get(INCREMENT_RATE,20*n_subiterations)
         return cls(n_layers,filter_size,pool_size,pool_strides,channels,batch_size,increment_rate,spams_param)
 

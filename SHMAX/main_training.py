@@ -2,11 +2,13 @@ import json
 import argparse
 import numpy as np
 import torch
+import datetime
 
 import data
 from models import SHMAX
 import pickling
 import utils
+import musicnet
 
 TRAINING = 'training'
 MAX_ITERATIONS = "max_iterations"
@@ -16,6 +18,8 @@ SAVE_DIR = "save_dir"
 
 
 if __name__ == '__main__':
+
+    print(datetime.datetime.today())
 
     parser = argparse.ArgumentParser()
     parser.add_argument("config")
@@ -38,7 +42,7 @@ if __name__ == '__main__':
     iteration = 0
     if pickling.WARM_START in config.keys():
         pickling.update_model_from_config(model,config[pickling.WARM_START])
-        iteration = config[pickling.WARM_START][pickling.ITERATION]
+        iteration = config[pickling.WARM_START][pickling.ITERATION] + 1
         print('\nwarm start model loaded at iteration '+str(iteration)+'\n----------')
 
     # TRAINING
@@ -49,17 +53,21 @@ if __name__ == '__main__':
 
     print('Starting training')
     with data_loader.dataset:
-        for i, (x, y) in enumerate(data_loader.loader):
+        for i, elem in enumerate(data_loader.loader):
             if iteration:
                 i = i + iteration
             if i > max_iterations:
                 break
             print(f'iteration {i}')
-            print(f'transforming signals into cochleagrams')
-            cgrams = utils.wav2cgram(x.numpy(),sr=config['data'][data.SR])
+            if isinstance(data_loader.dataset,musicnet.MusicNet):
+                print(f'transforming signals into cochleagrams')
+                cgrams = utils.wav2cgram(elem[0].numpy(),sr=config['data'][data.SR])
+            else:
+                cgrams = elem
             cgrams = np.expand_dims(cgrams,1)
             cgrams = torch.tensor(cgrams)
 
+            # TODO Why subiterations. Why not batch_size = n_subiters*batch_size??
             for k in range(n_subiterations):
                 print(f'sub-iteration {k}')
                 model.forward_train(cgrams)

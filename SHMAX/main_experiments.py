@@ -7,11 +7,14 @@ import pickling
 import data
 import experiments
 
+import datetime
+
 EXPERIMENTS_LIST = "experiments_list"
 
 
 if __name__ == '__main__':
 
+    print(datetime.datetime.today())
     parser = argparse.ArgumentParser()
     parser.add_argument("experiment")
     args = parser.parse_args()
