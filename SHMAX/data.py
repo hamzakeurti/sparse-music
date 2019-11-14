@@ -1,7 +1,9 @@
 import torch
+from torch.utils.data import Dataset, DataLoader
+import os
 
 import musicnet
-
+import pickling
 
 
 # CONFIG KEYS------
@@ -25,6 +27,9 @@ class DataIterator:
                 directory = MUSICNET_DIRECTORY
             self.dataset = musicnet.MusicNet(root=directory, train=True, window=kwargs[WINDOW], download=kwargs.get(DOWNLOAD,True),pitch_shift=kwargs.get(PITCH_SHIFT,0),jitter=kwargs.get(JITTER,0))
             self.loader = torch.utils.data.DataLoader(dataset=self.dataset,batch_size=batch_size)
+        elif dataset == 'cochleagram':
+            self.dataset = CochleagramsDataset(root=directory)
+            self.loader = torch.utils.data.DataLoader(dataset=self.dataset,batch_size=batch_size)
         else:
             raise NameError(f'dataset {dataset} not handled')
 
@@ -38,3 +43,31 @@ class DataIterator:
         return cls(dataset,batch_size,directory = directory,**config)
 
     
+class CochleagramsDataset(Dataset):
+
+    def __init__(self,root):
+        if not os.path.exists(root):
+            raise FileNotFoundError
+        self.root = root
+        self.files_list = os.listdir(self.root) 
+        if len(self.files_list) == 0:
+            print(f'Dataset root folder {root} is empty')
+            raise Exception
+        self.extension = os.listdir(self.root)[0].split('.')[-1]
+        
+
+    def __len__(self):
+        return len(os.listdir(self.root))
+    
+    def __getitem__(self,idx):
+        if torch.is_tensor(idx):
+            idx = idx.tolist()
+        
+        f = self.files_list[idx]
+        return pickling.load_tensor(os.path.join(self.root,f))
+    
+    def __enter__(self):
+        pass
+
+    def __exit__(self, *args):
+        pass
