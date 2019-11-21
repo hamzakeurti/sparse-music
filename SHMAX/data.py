@@ -60,12 +60,20 @@ class CochleagramsDataset(Dataset):
         return len(os.listdir(self.root))
     
     def __getitem__(self,idx):
+        idx  = idx % len(self.files_list)
         if torch.is_tensor(idx):
             idx = idx.tolist()
-        
         f = self.files_list[idx]
-        return pickling.load_tensor(os.path.join(self.root,f))
-    
+        try:
+            if self.extension == 'p':
+                return pickling.load_tensor(os.path.join(self.root,f))
+            if self.extension == 'pt':
+                return torch.load(os.path.join(self.root,f)).numpy()
+        except EOFError:
+            os.remove(os.path.join(self.root,f))
+            del self.files_list[idx]
+            return self.__getitem__(idx)
+
     def __enter__(self):
         pass
 
