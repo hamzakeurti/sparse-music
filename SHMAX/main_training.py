@@ -65,7 +65,7 @@ if __name__ == '__main__':
             else:
                 cgrams = elem
             cgrams = np.expand_dims(cgrams,1)
-            cgrams = torch.tensor(cgrams)
+            cgrams = torch.tensor(cgrams,dtype=torch.float)
 
             # TODO Why subiterations. Why not batch_size = n_subiters*batch_size??
             for k in range(n_subiterations):
