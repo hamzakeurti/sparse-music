@@ -4,7 +4,6 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 from numpy.lib.stride_tricks import as_strided
-from sklearn.decomposition import DictionaryLearning, MiniBatchDictionaryLearning, SparseCoder
 from patcher import Patcher
 
 import spams
@@ -94,3 +93,22 @@ class SLayer(nn.Module):
             self.param['D'] = D
         return D
 
+
+def learn_dictionary(patches,param,model=None,standardize_input=True):
+    X = patches.T
+    if standardize_input:
+        X = standardize(X)
+    X = np.asfortranarray(X, dtype=float)
+    if model:
+        (D, model) = spams.trainDL(
+            X, return_model=True, model=model, **param)
+        param['D'] = D
+    else:
+        (D, model) = spams.trainDL(X, return_model=True, **param)
+        param['D'] = D
+    return D,model
+
+def standardize(X):
+    X = X - np.tile(np.mean(X, 0), (X.shape[0], 1))
+    X = X / np.tile(np.sqrt((X * X).sum(axis=0)), (X.shape[0], 1))
+    return X
