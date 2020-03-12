@@ -28,31 +28,27 @@ if __name__ == '__main__':
     data_iterator = data.DataIterator.from_config(config[const.DATA])
     print('\nData loader successfully initiated\n----------------------')
 
-    # MODEL INSTANCIATION
-    # filters_shape = (50,5)
-    # dict_size = 50
-    # batch_size = 50
-    # band_indices = [0,50,100,150,200]
-    model = LocalSHMAX.from_config(config[const.MODEL])
+    # MODEL INSTANCIATION (Layer1)
+    save_directory = "/home/hamza/data3/projects/sparse_music/experiments/exp3/pickles/"
+    layer1 = LocalSHMAX.from_saved(save_directory)
+    layer2 = LocalSHMAX.from_config(config[const.MODEL])
     print('\nModel successfully initiated\n---------------------')
-
-    # WARM START (OPTIONAL)
-
 
     # PATCHING
     with data_iterator.dataset:
         for i, elem in enumerate(data_iterator.loader):
-            model.extract_patches(elem)
-            if len(model.patches[0])*model.patch_batch > config[const.TRAINING][const.MAX_PATCHES]:
+            fm = layer1.forward(elem)
+            layer2.extract_patches(fm)
+            if len(layer2.patches[0])*layer2.patch_batch > config[const.TRAINING][const.MAX_PATCHES]:
                 break
-    print(f'\nExtracted {len(model.patches[0])*model.patch_batch} patches\n---------------------')
+    print(f'\nExtracted {len(layer2.patches[0])*layer2.patch_batch} patches\n---------------------')
     # TRAINING
-    model.train()
+    layer2.train()
 
     # Forwarding
 
     # Saving
-    model.save(config[const.TRAINING][const.SAVE_DIR])
+    layer2.save(config[const.TRAINING][const.SAVE_DIR])
     print(f'\nSaved model at {config[const.TRAINING][const.SAVE_DIR]}\n---------------------')
 
 
