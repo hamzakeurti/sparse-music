@@ -5,9 +5,9 @@ N_SUBITERATIONS = "n_subiterations"
 SAVE_RATE = "save_rate"
 SAVE_DIR = "save_dir"
 
-# DATA
+# DATA--------------
 DATA = "data"
-# CONFIG KEYS------
+# CONFIG KEYS-------
 BATCH_SIZE = 'batch_size'
 DIRECTORY = 'directory'
 DATASET = 'dataset'
@@ -42,6 +42,7 @@ N_SUBITERATIONS = 'n_subiterations'
 INCREMENT_RATE = 'increment_rate'
 LAYERS_CONFIG = 'layers_config'
 CHANNELS_IN = 'channels_in'
+PICKLES_DIRECTORY = 'pickles_dir'
 ## LocalSHMAX---------------
 BAND_INDICES = "band_indices"
 N_BANDS = "n_bands"
@@ -49,3 +50,11 @@ DICT_SIZE = "dict_size"
 FILTER_SHAPE = "filters_shape"
 PATCH_BATCH = 'patch_batch'
 MAX_PATCHES = "max_patches"
+
+# Experiments
+SAVE_EXP = "save_exp"
+MODEL_NAME = "model_name"
+## Model names
+SHMAX = "shmax"
+LOCAL_SHMAX = "localshmax"
+
