@@ -13,11 +13,11 @@ import datetime
 import pickle
 import torch
 
-from common import datasets as data
-from common import constants as const
-from common import pickling
-from SHMAX.models import SHMAX
-from localmlp.layers import LocalSHMAX 
+from sparse_music.common import datasets as data
+from sparse_music.common import constants as const
+from sparse_music.common import pickling
+from sparse_music.SHMAX.models import SHMAX
+from sparse_music.localmlp.layers import LocalSHMAX 
 
 
 # from sparse_music.common import tuningcurves as tc 
@@ -39,7 +39,7 @@ if __name__ == '__main__':
 
     # Load model
     def load_model(config):
-        model_name = config.get(const.MODEL_NAME)
+        model_name = config[const.MODEL][const.MODEL_NAME]
         if model_name == const.SHMAX:
             model = SHMAX.from_config(config['model'])
             iteration = 0
@@ -65,11 +65,12 @@ if __name__ == '__main__':
     frequencies = []
 
     for i,(cgrams,freqs) in enumerate(dataloader.loader):
-        cgrams.unsqueeze(1)
+        cgrams = cgrams.unsqueeze(1)
         temp = cgrams
         print(i)
         for ilayer in range(len(layers)):    
-            temp = layers[ilayer].forward(temp)[:,:,:,30]
+            temp = layers[ilayer].forward(temp)
+            temp = temp[...,temp.shape[-1]//2]
             responses[ilayer].append(temp)
         frequencies.append(freqs)
     freq_axis = torch.cat(frequencies,0)

@@ -4,7 +4,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 from numpy.lib.stride_tricks import as_strided
-from patcher import Patcher
+from sparse_music.SHMAX.patcher import Patcher
 
 import spams
 

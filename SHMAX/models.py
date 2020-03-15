@@ -1,8 +1,8 @@
 import torch
 import torch.nn as nn
 
-from layers import SLayer
-import utils
+from sparse_music.SHMAX.layers import SLayer
+from sparse_music.common import utils
 
 BATCH_SIZE = 'batch_size'
 POOL_SIZE = 'pool_size'
