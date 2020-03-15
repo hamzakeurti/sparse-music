@@ -57,4 +57,12 @@ MODEL_NAME = "model_name"
 ## Model names
 SHMAX = "shmax"
 LOCAL_SHMAX = "localshmax"
+## Parameters
+SIGMA = "sigma"
+NEIGHBORHOOD_SIZE = "neighborhood_size"
+THRESHOLD = "threshold"
+PERCENTILE = "percentile"
+MIN_N_PEAKS = "min_n_peaks"
+MAX_N_PEAKS = "max_n_peaks"
+
 
