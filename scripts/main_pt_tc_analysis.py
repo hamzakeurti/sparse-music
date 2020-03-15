@@ -8,8 +8,8 @@ import argparse
 import pickle
 import datetime
 
-from common import constants as const
-from common import tuningcurves as tc
+from sparse_music.common import constants as const
+from sparse_music.common import tuningcurves as tc
 
 if __name__ == '__main__':
 
