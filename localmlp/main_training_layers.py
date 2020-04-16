@@ -29,26 +29,31 @@ if __name__ == '__main__':
     print('\nData loader successfully initiated\n----------------------')
 
     # MODEL INSTANCIATION (Layer1)
-    save_directory = config.get(const.PICKLES_DIRECTORY)[0]
-    layer1 = LocalSHMAX.from_saved(save_directory)
-    layer2 = LocalSHMAX.from_config(config[const.MODEL])
+    save_directory = config.get(const.PICKLES_DIRECTORY)
+    layers = []
+    for i in range(len(save_directory)):
+        layers.append(LocalSHMAX.from_saved(save_directory[i]))
+    layer = LocalSHMAX.from_config(config[const.MODEL])
     print('\nModel successfully initiated\n---------------------')
 
     # PATCHING
     with data_iterator.dataset:
         for i, elem in enumerate(data_iterator.loader):
-            if len(layer2.patches[0])*layer2.patch_batch > config[const.TRAINING][const.MAX_PATCHES]:
+            if len(layer.patches[0])*layer.patch_batch > config[const.TRAINING][const.MAX_PATCHES]:
                 break
-            fm = layer1.forward(elem)
-            layer2.extract_patches(fm)
-    print(f'\nExtracted {len(layer2.patches[0])*layer2.patch_batch} patches\n---------------------')
+            fm = elem
+            for i in range(len(layers)):
+                fm = layers[i].forward(fm)
+                # print(f'forwarded through layer{i}')
+            layer.extract_patches(fm)
+            print(f'extracted {len(layer.patches[0])*layer.patch_batch}patches / {config[const.TRAINING][const.MAX_PATCHES]}')
+    print(f'\nExtracted {len(layer.patches[0])*layer.patch_batch} patches\n---------------------')
     # TRAINING
-    layer2.train()
+    layer.train()
 
-    # Forwarding
 
     # Saving
-    layer2.save(config[const.TRAINING][const.SAVE_DIR])
+    layer.save(config[const.TRAINING][const.SAVE_DIR])
     print(f'\nSaved model at {config[const.TRAINING][const.SAVE_DIR]}\n---------------------')
 
 

@@ -54,6 +54,7 @@ if __name__ == '__main__':
             layers = []
             for directory in pickles_dir:
                 layers.append(LocalSHMAX.from_saved(directory))
+                print(layers[-1].band_blocks[0].dict_tensor.shape)
         return layers
 
 
@@ -61,26 +62,37 @@ if __name__ == '__main__':
 
     # Forwarding
     all_responses = [] 
-    responses = [[]*len(layers)]
+    responses = [[] for i in range(len(layers))]
     frequencies = []
 
     for i,(cgrams,freqs) in enumerate(dataloader.loader):
         cgrams = cgrams.unsqueeze(1)
         temp = cgrams
-        print(i)
         for ilayer in range(len(layers)):    
             temp = layers[ilayer].forward(temp)
-            temp = temp[...,temp.shape[-1]//2]
+            # temp = temp[...,temp.shape[-1]//2]
+            # if ilayer == 1:
             responses[ilayer].append(temp)
         frequencies.append(freqs)
+
+    # del responses[0]
     freq_axis = torch.cat(frequencies,0)
     for ilayer in range(len(layers)):
-        responses[ilayer] = torch.cat(responses[ilayer],0)
+        # if ilayer == 0:
+        responses[ilayer] = torch.cat(responses[ilayer],0)[...,responses[ilayer][0].shape[-1]//2]
 
     # save the responses
-    tosave = {'freq_axis':freq_axis,'outs':responses}
-    responses_file = config.get(const.SAVE_EXP)
-    with open(responses_file,'wb') as f:
-        pickle.dump(tosave,f)
-        print(f"{len(responses)} response tensors saved at {responses_file}")
+    responses_file = config.get(const.CURVES_DIR,None)
+    if not responses_file:
+        responses_file = config[const.SAVE_EXP]
 
+    dirname = os.path.dirname(responses_file)
+    if not os.path.exists(dirname):
+        os.mkdir(dirname)
+    
+    for i in range(len(responses)):
+        tosave = {'freq_axis':freq_axis,'outs':[responses[i]]}
+        print(f'trying to save responses of shape {responses[i].shape}')
+        with open(os.path.join(dirname,f'ptresponses{i}.p'),'wb') as f:
+            pickle.dump(tosave,f)
+            print(f"response tensors saved at ptresponses{i}.p")

@@ -3,6 +3,8 @@ from torch.utils.data import Dataset, DataLoader
 import os
 
 from sparse_music.common import musicnet, pickling
+from sparse_music.common import constants as const
+
 
 # CONFIG KEYS------
 BATCH_SIZE = 'batch_size'
@@ -34,6 +36,10 @@ class DataIterator:
                 DOWNLOAD, True), pitch_shift=kwargs.get(PITCH_SHIFT, 0), jitter=kwargs.get(JITTER, 0))
         elif dataset == 'cochleagram':
             transform = None
+            if directory == 'speech':
+                directory = const.SPEECH_DIRECTORY
+            if directory == 'music':
+                directory = const.MUSICNET_COCH_DIRECTORY
             if kwargs.get('normalize', 0):
                 transform = Normalize()
             self.dataset = CochleagramsDataset(

@@ -53,6 +53,7 @@ MAX_PATCHES = "max_patches"
 
 # Experiments
 SAVE_EXP = "save_exp"
+CURVES_DIR = "curves_dir"
 MODEL_NAME = "model_name"
 ## Model names
 SHMAX = "shmax"
@@ -64,5 +65,6 @@ THRESHOLD = "threshold"
 PERCENTILE = "percentile"
 MIN_N_PEAKS = "min_n_peaks"
 MAX_N_PEAKS = "max_n_peaks"
-
-
+BINS = "bins"
+PROPER_FRACTIONS = "proper_fractions"
+ALL_PEAKS = "all_peaks"

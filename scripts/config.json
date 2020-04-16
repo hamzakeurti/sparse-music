@@ -1,0 +1,10 @@
+{
+    "model":
+    {
+        "model_name":"localshmax",
+        "pickles_dir":[
+            "/home/hamza/data3/projects/sparse_music/experiments/exp4/pickles/"
+        ]
+    },
+    "save_exp":"/home/hamza/data3/projects/sparse_music/experiments/exp4/results/ptresponses2.p"
+}

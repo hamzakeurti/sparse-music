@@ -5,11 +5,13 @@ import torch.nn.functional as F
 import os
 import spams
 import pickle
+from multiprocessing import Pool
 
 import sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))))
 
 from sparse_music.common import constants as const
+from sparse_music.common import whitening
 
 
 class BandBlock(nn.Module):
@@ -25,8 +27,30 @@ class BandBlock(nn.Module):
         self.channels_out = dict_size
         self.channels_in = channels_in
         self.savable = ["dict", "dict_tensor", "dict_size",
-                        "filters_shape", "spams_param", "device", "channels_out", "channels_in"]
+                        "filters_shape", "spams_param", "device", "channels_out",
+                        "channels_in","mean","eigen_vals","eigen_vecs","n_components"]
+        self.mean = None
+        self.eigen_vals = None
+        self.eigen_vecs = None
+        self.n_components = None
 
+        
+    def whiten_train(self,patches,n_components=False,standardize=False):
+        # call spams train memory
+        if len(patches.shape) > 2:
+            patches = patches.reshape(patches.shape[0], -1)
+        if not n_components:
+            n_components = patches.shape[-1]//4
+        patches,self.eigen_vecs,self.eigen_vals,self.mean = whitening.whiten_fit_transform(patches.T, n_components = n_components)
+        self.n_components = patches.shape[0]
+        patches = patches.T
+        patches = np.asfortranarray(patches)
+        self.dict = learn_dictionary(
+            patches, self.spams_param, standardize_input=standardize)
+        self.dict_tensor = torch.tensor(
+            self.dict.T.reshape(self.channels_out, 1,self.n_components,1)).type(torch.FloatTensor).to(self.device)
+     
+        
     def train(self, patches, standardize=False):
         # call spams train memory
         if len(patches.shape) > 2:
@@ -40,6 +64,27 @@ class BandBlock(nn.Module):
     def forward(self, input):
         # do conv
         return F.conv2d(input=input, weight=self.dict_tensor)
+    
+    def whiten_forward(self,input):
+        if (self.eigen_vecs is None) or (self.eigen_vals is None):
+            print('no whitening parameters')
+            return
+        # First whiten
+        input = input.numpy()
+        out = []
+        for j in range(input.shape[-1]-self.filters_shape[-1]):
+            patches = input[:,:,:,j:j+self.filters_shape[-1]].reshape(input.shape[0],-1)
+#             shape: [n_samples,n_features]
+            patches = whitening.whiten_transform(patches.T,self.eigen_vecs,self.eigen_vals,self.mean,self.n_components)
+            patches = patches.T
+            out.append(patches)
+        out = np.stack(out,axis = -1)
+#         shape: [n_samples,n_components,t_samples]
+        out = torch.FloatTensor(out)
+        out = out.unsqueeze(1)
+        out = F.conv2d(input=out, weight=self.dict_tensor)
+        return out
+        
 
     def save(self, filename):
         data = {}
@@ -48,6 +93,15 @@ class BandBlock(nn.Module):
                 data[attr] = self.__dict__[attr]
         with open(filename, "wb") as f:
             pickle.dump(data, f)
+
+    def extract_patches(self, input):
+        if len(input.shape) <4:
+            input = torch.unsqueeze(input, 1)
+        for i in range(len(self.band_blocks)):
+            # self.patches is a list of per band patches, for each band, it contains a list of batches of patches to be concatenated at training time
+            self.patches[i].append(patch(input, patch_batch=self.patch_batch, filter_height=self.filters_shape[0],
+                                         filter_width=self.filters_shape[1], height_interval=[self.band_indices[i], self.band_indices[i]+1]))
+
 
 
 class LocalSHMAX(nn.Module):
@@ -109,7 +163,11 @@ class LocalSHMAX(nn.Module):
             with open(f'{directory}{b}.p','rb') as f:
                 data = pickle.load(f)
                 model.band_blocks[b].dict = data['dict']
-                model.band_blocks[b].dict_tensor = data['dict_tensor']
+                model.band_blocks[b].dict_tensor = data['dict_tensor'].type(torch.FloatTensor)
+                model.band_blocks[b].mean = data['mean']
+                model.band_blocks[b].eigen_vals = data['eigen_vals']
+                model.band_blocks[b].eigen_vecs = data['eigen_vecs']
+                model.band_blocks[b].n_components = data['n_components']
         return model
 
     def extract_patches(self, input):
@@ -120,14 +178,48 @@ class LocalSHMAX(nn.Module):
             self.patches[i].append(patch(input, patch_batch=self.patch_batch, filter_height=self.filters_shape[0],
                                          filter_width=self.filters_shape[1], height_interval=[self.band_indices[i], self.band_indices[i]+1]))
 
+
+    def extract_patches_multiprocessing(self,input):
+        if len(input.shape) <4:
+            input = torch.unsqueeze(input, 1)
+        def patch_band(i):
+            print(f'patching for band{i}/{self.n_bands}')
+            self.patches[i].append(patch(input, patch_batch=self.patch_batch, filter_height=self.filters_shape[0],
+                                    filter_width=self.filters_shape[1], height_interval=[self.band_indices[i], self.band_indices[i]+1]))
+        p = Pool(4)
+        p.map(patch_band,range(len(self.patches)))
+
+
     def train(self):
         # Patch here?
-        self.patches = [np.concatenate(p, axis=0) for p in self.patches]
+        if isinstance(self.patches[0],list):
+            self.patches = [np.concatenate(p, axis=0) for p in self.patches]
         for i, band in enumerate(self.band_blocks):
             # Need to make sure we're using patched data
             print(f'Training band {i}/{self.n_bands}')
             band.train(self.patches[i])
         del self.patches
+    
+    def whiten_train(self,n_components=None):
+        if isinstance(self.patches[0],list):
+            self.patches = [np.concatenate(p, axis=0) for p in self.patches]
+        for i, band in enumerate(self.band_blocks):
+            # Need to make sure we're using patched data
+            print(f'Training band {i}/{self.n_bands}')
+            band.whiten_train(self.patches[i],n_components)
+        del self.patches
+
+    def train_multiprocessing(self):
+        if isinstance(self.patches[0],list):
+            self.patches = [np.concatenate(p, axis=0) for p in self.patches]
+        def train_band(i):
+            print(f'Training band {i}/{self.n_bands}')
+            self.band_blocks[i].train(self.patches(i))
+        p = Pool(4)
+        p.map(train_band,range(len(self.patches)))
+        del self.patches
+
+
 
     def forward(self, input):
         output = []
@@ -135,11 +227,23 @@ class LocalSHMAX(nn.Module):
             input = torch.unsqueeze(input, 1)
         for i, band in enumerate(self.band_blocks):
             output.append(band.forward(
-                input[:, :, self.band_indices[i]:self.band_indices[i]+self.filters_shape[0], :]))
+                input[:, :, self.band_indices[i]:self.band_indices[i]+self.filters_shape[0], :].type(torch.FloatTensor)))
         # conncatenate along the freq dimension
         output = torch.cat(output, dim=-2)
         return output
 
+    def whiten_forward(self,input):
+        output = []
+        if len(input.shape) <4:
+            input = torch.unsqueeze(input, 1)
+        for i, band in enumerate(self.band_blocks):
+            output.append(band.whiten_forward(
+                input[:, :, self.band_indices[i]:self.band_indices[i]+self.filters_shape[0], :].type(torch.FloatTensor)))
+        # conncatenate along the freq dimension
+        output = torch.cat(output, dim=-2)
+        return output
+        
+            
     def save(self, directory):
         # remove extension if present
         if directory.endswith('.p'):

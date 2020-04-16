@@ -42,9 +42,9 @@ if __name__ == '__main__':
     # PATCHING
     with data_iterator.dataset:
         for i, elem in enumerate(data_iterator.loader):
-            model.extract_patches(elem)
             if len(model.patches[0])*model.patch_batch > config[const.TRAINING][const.MAX_PATCHES]:
                 break
+            model.extract_patches(elem)
     print(f'\nExtracted {len(model.patches[0])*model.patch_batch} patches\n---------------------')
     # TRAINING
     model.train()
