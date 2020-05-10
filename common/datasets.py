@@ -2,6 +2,9 @@ import torch
 from torch.utils.data import Dataset, DataLoader
 import os
 
+import sys
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))))
+
 from sparse_music.common import musicnet, pickling
 from sparse_music.common import constants as const
 
@@ -89,7 +92,7 @@ class CochleagramsDataset(Dataset):
             if self.extension == 'p':
                 sample = pickling.load_tensor(os.path.join(self.root, f))
             if self.extension == 'pt':
-                sample = torch.load(os.path.join(self.root, f)).numpy()
+                sample = torch.load(os.path.join(self.root, f))
             if self.transform:
                 sample = self.transform(sample)
             return sample
