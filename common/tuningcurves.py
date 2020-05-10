@@ -49,8 +49,8 @@ def peaks_gradient(arr, n, threshold=None, percentile=80):
     out_arr[..., n+1:-(n+1)] = True
     
     for i in range(0, n):
-        out_arr[..., n+1:-(n+1)] &= (arr[..., n+1-i:-(n+1)-i] >= arr[..., n+1-i-1:-(n+1)-i-1]) # increasing to the left of the peak      
-        out_arr[..., n+1:-(n+1)] &= (arr[..., n+1+i:-(n+1)+i] >= arr[..., n+1+i+1:-(n+1)+i+1])
+        out_arr[..., n+1:-(n+1)] &= (arr[..., n+1-i:-(n+1)-i] > arr[..., n+1-i-1:-(n+1)-i-1]) # increasing to the left of the peak      
+        out_arr[..., n+1:-(n+1)] &= (arr[..., n+1+i:-(n+1)+i] > arr[..., n+1+i+1:-(n+1)+i+1])
 
     return out_arr
 
@@ -59,12 +59,12 @@ def peaks_bandwidth(arr, n,level = 1.1):
     out_arr = np.zeros(arr.shape,dtype=bool)
     out_arr[..., n+1:-(n+1)] = True
     for i in range(0, n//2):
-        out_arr[..., n+1:-(n+1)] &= (arr[..., n+1:-(n+1)] >= arr[..., n+1-i:-(n+1)-i]) # increasing to the left of the peak      
-        out_arr[..., n+1:-(n+1)] &= (arr[..., n+1:-(n+1)] >= arr[..., n+1+i:-(n+1)+i])
+        out_arr[..., n+1:-(n+1)] &= (arr[..., n+1:-(n+1)] > arr[..., n+1-i:-(n+1)-i]) # increasing to the left of the peak      
+        out_arr[..., n+1:-(n+1)] &= (arr[..., n+1:-(n+1)] > arr[..., n+1+i:-(n+1)+i])
         
     for i in range(n//2,n):
-        out_arr[..., n+1:-(n+1)] &= (arr[..., n+1:-(n+1)] >= level*arr[..., n+1-i:-(n+1)-i]) # increasing to the left of the peak      
-        out_arr[..., n+1:-(n+1)] &= (arr[..., n+1:-(n+1)] >= level*arr[..., n+1+i:-(n+1)+i])
+        out_arr[..., n+1:-(n+1)] &= (arr[..., n+1:-(n+1)] > level*arr[..., n+1-i:-(n+1)-i]) # increasing to the left of the peak      
+        out_arr[..., n+1:-(n+1)] &= (arr[..., n+1:-(n+1)] > level*arr[..., n+1+i:-(n+1)+i])
 
     return out_arr
 
