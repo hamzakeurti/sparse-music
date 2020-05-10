@@ -60,12 +60,10 @@ def peaks_bandwidth(arr, n,m,level = 1.1):
     out_arr[..., n+1:-(n+1)] = True
 
     for i in range(1, m):
-        out_arr[..., n+1:-(n+1)] &= (arr[..., n+1:-(n+1)] > arr[..., n+1-i:-(n+1)-i]) # increasing to the left of the peak      
-
+        out_arr[..., n+1:-(n+1)] &= (arr[..., n+1:-(n+1)] > arr[..., n+1-i:-(n+1)-i])    
         out_arr[..., n+1:-(n+1)] &= (arr[..., n+1:-(n+1)] > arr[..., n+1+i:-(n+1)+i])
-        
     for i in range(m,n):
-        out_arr[..., n+1:-(n+1)] &= (arr[..., n+1:-(n+1)] > level*arr[..., n+1-i:-(n+1)-i]) # increasing to the left of the peak      
+        out_arr[..., n+1:-(n+1)] &= (arr[..., n+1:-(n+1)] > level*arr[..., n+1-i:-(n+1)-i])
         out_arr[..., n+1:-(n+1)] &= (arr[..., n+1:-(n+1)] > level*arr[..., n+1+i:-(n+1)+i])
 
     return out_arr
@@ -93,37 +91,84 @@ def all_peaks_ratios(peaks_arr, freqs_arr, min_n_peaks=2, max_n_peaks=4):
                     ratios.append(n_peaked[n_peaks*i+k]/n_peaked[n_peaks*i+j])
     return np.array(ratios)
 
-def plot_ratios_histogram(ratios,bins=25,alpha=0.5,save_file=None):
+# def plot_ratios_histogram(ratios,bins=25,alpha=0.5,save_file=None):
 
-    xmusical = musical_ratios2
-    xharmonics = harmonic_ratios2
-    xoctave = octave_ratios2
-    if ratios[0]<1:
-        xharmonics = 1/xharmonics
-        xmusical = 1/xmusical
-        xoctave = 1/xoctave
+#     xmusical = musical_ratios2
+#     xharmonics = harmonic_ratios2
+#     xoctave = octave_ratios2
+#     if ratios[0]<1:
+#         xharmonics = 1/xharmonics
+#         xmusical = 1/xmusical
+#         xoctave = 1/xoctave
 
-    xharmonics = xharmonics[((xharmonics-0.1)>ratios.min()) & ((xharmonics + 0.1) < ratios.max())]
-    xmusical = xmusical[((xmusical-0.1)>ratios.min()) & ((xmusical + 0.1) < ratios.max())]
-    xoctave = xoctave[((xoctave-0.1)>ratios.min()) & ((xoctave + 0.1) < ratios.max())]
+#     xharmonics = xharmonics[((xharmonics-0.1)>ratios.min()) & ((xharmonics + 0.1) < ratios.max())]
+#     xmusical = xmusical[((xmusical-0.1)>ratios.min()) & ((xmusical + 0.1) < ratios.max())]
+#     xoctave = xoctave[((xoctave-0.1)>ratios.min()) & ((xoctave + 0.1) < ratios.max())]
 
  
+#     plt.figure()
+#     ret = plt.hist(ratios,bins=bins,alpha = alpha)
+#     plt.xlabel('Consecutive peaks ratios')
+#     plt.ylabel('Count')
+#     for xc in xharmonics[:-1]:
+#         plt.axvline(x=xc,linestyle = '--',alpha = 0.8)
+#     plt.axvline(x=xharmonics[-1],linestyle = '--', alpha = 0.8,label='other harmonic ratios')
+
+#     for xc in xmusical[:-1]:
+#         plt.axvline(x=xc,color = 'r',linestyle = '--',alpha = 0.8)
+#     plt.axvline(x=xmusical[-1],color = 'r', linestyle = '--', alpha = 0.8,label='musical ratios')
+
+#     for xc in xoctave[:-1]:
+#         plt.axvline(x=xc,color = 'g',linestyle = '--',alpha = 0.8)
+#     plt.axvline(x=xoctave[-1],color = 'g',linestyle = '--', alpha = 0.8,label='octave ratios')
+
+
+#     plt.legend()
+#     if save_file:
+#         plt.savefig(save_file)
+#         plt.close()
+#     return ret
+
+
+def plot_ratios_histogram(ratios,bins=25,alpha=0.5,save_file=None,xlabel='Peaks ratios', r = [0,1,2,3,4,5]):
     plt.figure()
     ret = plt.hist(ratios,bins=bins,alpha = alpha)
-    plt.xlabel('Consecutive peaks ratios')
+    plt.xlabel(xlabel)
     plt.ylabel('Count')
-    for xc in xharmonics[:-1]:
-        plt.axvline(x=xc,linestyle = '--',alpha = 0.8)
-    plt.axvline(x=xharmonics[-1],linestyle = '--', alpha = 0.8,label='other harmonic ratios')
+    
+    if ratios[0]<1:
+        if 0 in r:
+            plt.axvline(x=0.8,color= 'm',linestyle = '--', alpha = 0.8,label='4:5')
 
-    for xc in xmusical[:-1]:
-        plt.axvline(x=xc,color = 'r',linestyle = '--',alpha = 0.8)
-    plt.axvline(x=xmusical[-1],color = 'r', linestyle = '--', alpha = 0.8,label='musical ratios')
+        if 1 in r:
+            plt.axvline(x=0.75,color= 'm',linestyle = '--', alpha = 0.8,label='3:4')
 
-    for xc in xoctave[:-1]:
-        plt.axvline(x=xc,color = 'g',linestyle = '--',alpha = 0.8)
-    plt.axvline(x=xoctave[-1],color = 'g',linestyle = '--', alpha = 0.8,label='octave ratios')
+        if 2 in r:
+            plt.axvline(x=0.66,color= 'g',linestyle = '--', alpha = 0.8,label='2:3')    
+        if 3 in r:
+            plt.axvline(x=0.5,color = 'r',linestyle = '--', alpha = 0.8,label='1:2')
 
+        if 4 in r:
+            plt.axvline(x=0.4,color= 'b',linestyle = '--', alpha = 0.8,label='2:5')
+        if 5 in r:
+            plt.axvline(x=0.33,color= 'k',linestyle = '--', alpha = 0.8,label='1:3')
+        
+
+        
+    else:
+        if 0 in r:
+            plt.axvline(x=1.25,color= 'm',linestyle = '--', alpha = 0.8,label='4:5')
+        if 1 in r:
+            plt.axvline(x=1.33,color= 'k',linestyle = '--', alpha = 0.8,label='3:4')
+        if 2 in r:
+            plt.axvline(x=1.5,color= 'g',linestyle = '--', alpha = 0.8,label='2:3')
+        if 3 in r:
+            plt.axvline(x=2,color = 'r',linestyle = '--', alpha = 0.8,label='1:2')
+        if 4 in r:
+            plt.axvline(x=2.5,color= 'b',linestyle = '--', alpha = 0.8,label='2:5')
+        if 5 in r:
+            plt.axvline(x=3,color= 'k',linestyle = '--', alpha = 0.8,label='1:3')
+        
 
     plt.legend()
     if save_file:
