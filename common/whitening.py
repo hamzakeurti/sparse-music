@@ -1,6 +1,6 @@
 import numpy as np
 
-def whiten_fit_transform(X,threshold = None, n_components = None):
+def whiten_fit(X,threshold = None, n_components = None):
     # X expected in the shape (m features x n samples)
     assert(X.shape[0] < X.shape[1])
     # Center
@@ -34,6 +34,12 @@ def whiten_fit_transform(X,threshold = None, n_components = None):
                 if normalized_cumsum[i] > threshold:
                     n_components = i
                     break
+    
+    return eigen_vecs,eigen_vals,mean_vec
+
+def whiten_fit_transform(X,threshold = None, n_components = None):
+    eigen_vecs,eigen_vals,mean_vec = whiten_fit(X,threshold, n_components)
+    X_centered = X - mean_vec
 
     # Project X
     X_pca = np.dot(eigen_vecs[:,:(n_components+1)].T,X_centered)
