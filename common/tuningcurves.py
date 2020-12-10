@@ -55,7 +55,7 @@ def peaks_gradient(arr, n, threshold=None, percentile=80):
     return out_arr
 
 
-def peaks_bandwidth(arr, n,m,level = 1.1):
+def peaks_bandwidth(arr, n,m,level = 0.8):
     out_arr = np.zeros(arr.shape,dtype=bool)
     out_arr[..., n+1:-(n+1)] = True
 
@@ -63,8 +63,8 @@ def peaks_bandwidth(arr, n,m,level = 1.1):
         out_arr[..., n+1:-(n+1)] &= (arr[..., n+1:-(n+1)] > arr[..., n+1-i:-(n+1)-i])    
         out_arr[..., n+1:-(n+1)] &= (arr[..., n+1:-(n+1)] > arr[..., n+1+i:-(n+1)+i])
     for i in range(m,n):
-        out_arr[..., n+1:-(n+1)] &= (arr[..., n+1:-(n+1)] > level*arr[..., n+1-i:-(n+1)-i])
-        out_arr[..., n+1:-(n+1)] &= (arr[..., n+1:-(n+1)] > level*arr[..., n+1+i:-(n+1)+i])
+        out_arr[..., n+1:-(n+1)] &= ( level*arr[..., n+1:-(n+1)] >arr[..., n+1-i:-(n+1)-i])
+        out_arr[..., n+1:-(n+1)] &= (level*arr[..., n+1:-(n+1)] > arr[..., n+1+i:-(n+1)+i])
 
     return out_arr
 
@@ -139,21 +139,16 @@ def plot_ratios_histogram(ratios,bins=25,alpha=0.5,save_file=None,xlabel='Peaks 
     if ratios[0]<1:
         if 0 in r:
             plt.axvline(x=0.8,color= 'm',linestyle = '--', alpha = 0.8,label='4:5')
-
         if 1 in r:
             plt.axvline(x=0.75,color= 'm',linestyle = '--', alpha = 0.8,label='3:4')
-
         if 2 in r:
             plt.axvline(x=0.66,color= 'g',linestyle = '--', alpha = 0.8,label='2:3')    
         if 3 in r:
             plt.axvline(x=0.5,color = 'r',linestyle = '--', alpha = 0.8,label='1:2')
-
         if 4 in r:
             plt.axvline(x=0.4,color= 'b',linestyle = '--', alpha = 0.8,label='2:5')
         if 5 in r:
-            plt.axvline(x=0.33,color= 'k',linestyle = '--', alpha = 0.8,label='1:3')
-        
-
+            plt.axvline(x=0.33,color= 'c',linestyle = '--', alpha = 0.8,label='1:3')
         
     else:
         if 0 in r:
@@ -167,7 +162,7 @@ def plot_ratios_histogram(ratios,bins=25,alpha=0.5,save_file=None,xlabel='Peaks 
         if 4 in r:
             plt.axvline(x=2.5,color= 'b',linestyle = '--', alpha = 0.8,label='2:5')
         if 5 in r:
-            plt.axvline(x=3,color= 'k',linestyle = '--', alpha = 0.8,label='1:3')
+            plt.axvline(x=3,color= 'c',linestyle = '--', alpha = 0.8,label='1:3')
         
 
     plt.legend()

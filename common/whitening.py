@@ -8,8 +8,7 @@ def whiten_fit(X,threshold = None, n_components = None):
     X_centered = X - mean_vec
     
     # Covariance matrix
-    C = np.dot(X_centered,X_centered.T)/X_centered.shape[1]
-    
+    C = np.corrcoef(X_centered,rowvar = True)    
     # Eigen decomposition
     eigen_vals, eigen_vecs = np.linalg.eig(C)
     eigen_vals = np.real(eigen_vals)
@@ -72,3 +71,13 @@ def reconstruct_from_whitened(X_whitened,eigen_vecs,eigen_vals,mean_vec):
     X = np.dot(eigen_vecs[:,:X_whitened.shape[0]],X)
     X = X+mean_vec
     return X
+
+def keep_n_components(eigen_vals,threshold):
+
+    normalized_cumsum = np.cumsum(eigen_vals)/np.sum(eigen_vals)
+    for i in range(eigen_vals.shape[0]):
+        if normalized_cumsum[i] > threshold:
+            n_components = i
+            break
+    
+    return n_components
